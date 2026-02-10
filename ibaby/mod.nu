@@ -2,7 +2,7 @@ export use prompt.nu *
 export use completions *
 export use git *
 export use docker.nu *
-export use gum *
+use gum *
 export use aliases.nu *
 
 export-env {
