@@ -139,7 +139,9 @@ export def has-bun []: nothing -> bool {
 export def run-bun-install [
     target: path
 ]: nothing -> nothing {
-    if (has-bun) {
+    let package_json_path = $target | path join "package.json"
+
+    if ((package_json_path | path exists) and has-bun) {
         do -i { ^bun install --cwd $target }
     }
 }
