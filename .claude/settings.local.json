@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(nu:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.nushell.sh)",
+      "Bash(zoxide init:*)",
+      "Bash(save:*)",
+      "Bash(systemctl:*)",
+      "Bash(for dir in ~/.claude/projects/*/)",
+      "Bash(do index=\"$dir/sessions-index.json\")",
+      "Bash(if [ -f \"$index\" ])",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\(''$index''\\)\\); print\\(f''  entries: {len\\(d.get\\(\"\"entries\"\",[]\\)\\)}''\\)\")",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(fish --command \"complete -C''claude ''\")",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(fish:*)"
+    ]
+  }
+}
