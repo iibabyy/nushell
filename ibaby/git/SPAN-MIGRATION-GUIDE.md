@@ -6,13 +6,35 @@ This guide shows how to migrate from manual span threading to the spanned value 
 
 ## Core Utilities (span-utils.nu)
 
+**CRITICAL: Why Explicit Metadata?**
+
+When you call `metadata $value` inside a function, Nushell captures the metadata at that function's call site, NOT from where the user originally provided the value. This means the span would point to the wrong location in the code.
+
+**Wrong (span points to wrong line):**
+```nu
+export def make-spanned [value: any] {
+    { value: $value, span: (metadata $value | get span) }  # ❌ Captures span of this line!
+}
+```
+
+**Correct (span points to user's input):**
+```nu
+export def make-spanned [value: any, meta: record] {
+    { value: $value, span: ($meta | get span) }  # ✅ Uses span from call site
+}
+
+# Usage:
+let spanned_branch = (make-spanned $branch (metadata $branch))  # Captures span here
+```
+
 ```nu
 # Create spanned value from user input
-make-spanned $value
+# IMPORTANT: Must pass metadata explicitly to capture span at call site
+make-spanned $value (metadata $value)
 # => { value: <original-value>, span: <metadata-span> }
 
 # Create spanned value with default
-make-spanned-default $optional_value $default
+make-spanned-default $optional_value $default (metadata $optional_value)
 # => { value: <value-or-default>, span: <span-or-null> }
 
 # Error with spanned value
@@ -59,9 +81,9 @@ export def gtree [
     --path: path
     --workdir: path
 ]: nothing -> string {
-    let spanned_branch = (make-spanned $branch)
-    let spanned_path = if $path != null { make-spanned $path } else { null }
-    let spanned_workdir = (make-spanned-default $workdir $env.PWD)
+    let spanned_branch = (make-spanned $branch (metadata $branch))
+    let spanned_path = if $path != null { make-spanned $path (metadata $path) } else { null }
+    let spanned_workdir = (make-spanned-default $workdir $env.PWD (metadata $workdir))
     # ...
 }
 ```
@@ -155,7 +177,7 @@ Is the value used more than 2-3 times in the function?
 ```nu
 # When parameter might be null
 let spanned_path = if $custom_path != null {
-    make-spanned $custom_path
+    make-spanned $custom_path (metadata $custom_path)
 } else {
     null
 }
@@ -223,7 +245,7 @@ export def gtree [
 ```nu
 # Top-level wraps
 export def gtree [...] {
-    let spanned_branch = (make-spanned $branch)
+    let spanned_branch = (make-spanned $branch (metadata $branch))
     gtree-create $spanned_branch  # Pass through
 }
 

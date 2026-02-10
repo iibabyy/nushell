@@ -3,11 +3,12 @@
 # metadata spans, enabling better error messages that point to the exact source.
 
 # Create a spanned value from a user-provided parameter
-# Captures the span metadata at the point of wrapping
+# Takes explicit metadata to preserve span from the original call site
 export def make-spanned [
     value: any
+    meta: record
 ]: nothing -> record<value: any, span: any> {
-    { value: $value, span: (metadata $value | get span) }
+    { value: $value, span: ($meta | get span) }
 }
 
 # Create a spanned value for an optional parameter with a default
@@ -15,9 +16,10 @@ export def make-spanned [
 export def make-spanned-default [
     value: any
     default: any
+    meta?: record
 ]: nothing -> record<value: any, span: any> {
     if $value != null {
-        { value: $value, span: (metadata $value | get span) }
+        { value: $value, span: ($meta | get span) }
     } else {
         { value: $default, span: null }
     }

@@ -1,7 +1,8 @@
-use completers.nu git_branches
+use completers.nu [git_branches git_worktree_branches]
 use utils.nu cp-gitignored
 use worktree-utils.nu *
 use span-utils.nu [make-spanned make-spanned-default make-error]
+use ../gum "gum confirm"
 
 # Create or remove a git worktree
 #
@@ -11,46 +12,61 @@ use span-utils.nu [make-spanned make-spanned-default make-error]
 # to the clipboard for easy navigation.
 #
 # With --rm flag, removes the worktree associated with the branch name.
-# Uses an interactive prompt (using gum) to delete the branch (local and/or remote).
+# Uses gum confirmation prompts (unless --yes is used):
+#   1. "Are you sure you want to delete {path}?" (default: yes)
+#   2. "Do you want to delete the branch?" (default: no)
+# If the branch has a remote tracking branch, both local and remote are deleted.
+# Use --yes to skip prompts and automatically delete both worktree and branch.
 #
 # Default worktree location: <current-dir>/.worktrees/<branch-name>
 # Branch names with slashes (e.g., feature/foo) are converted to hyphens.
 @example "Create worktree for a feature branch" {gtree feature/new-auth}
 @example "Create worktree at custom path" {gtree bugfix/login-error --path ~/temp/bugfix}
 @example "Create worktree from specific base branch" {gtree hotfix/security --base-branch main}
-@example "Remove a worktree by branch name (interactive)" {gtree feature/new-auth --rm}
+@example "Remove a worktree by branch name (with confirmation prompts)" {gtree feature/new-auth --rm}
+@example "Remove worktree and branch without prompts" {gtree feature/new-auth --rm --yes}
 export def gtree [
-  branch: string               # Name of the branch (to create or remove with --rm)
+  branch: string@git_worktree_branches  # Name of the branch (to create or remove with --rm)
   --rm                         # Remove mode: remove existing worktree for this branch
   --path(-p): path             # Custom path for the worktree (defaults to <workdir>/.worktrees/<branch>)
   --base-branch: string@git_branches  # Base branch to branch from (defaults to current branch)
   --workdir(-w): path          # Base directory for the worktree (defaults to $env.PWD)
-  --delete-branch(-d)          # [--rm only] Also delete the branch after removing the worktree
-  --force(-f)                  # [--rm only] Force removal of dirty worktrees; with -d, force-deletes branch
+  --force(-f)                  # [--rm only] Force removal of dirty worktrees and force-delete branch
+  --yes(-y)                    # [--rm only] Skip confirmation prompts (deletes worktree and branch)
 ]: nothing -> string {
     # Wrap all user-provided parameters at entry
-    let spanned_branch = (make-spanned $branch)
-    let spanned_path = if $path != null { make-spanned $path } else { null }
-    let spanned_base = if $base_branch != null { make-spanned $base_branch } else { null }
-    let spanned_workdir = (make-spanned-default $workdir $env.PWD)
+    let spanned_branch = (make-spanned $branch (metadata $branch))
+    let spanned_path = if $path != null { make-spanned $path (metadata $path) } else { null }
+    let spanned_base = if $base_branch != null { make-spanned $base_branch (metadata $base_branch) } else { null }
+    let spanned_workdir = (make-spanned-default $workdir $env.PWD (metadata $workdir))
 
     # Handle remove mode
     if $rm {
-        validate-remove-mode-flags $spanned_path $spanned_base $delete_branch
+        validate-remove-mode-flags $spanned_path $spanned_base
+
+        # Validate git repo first
+        validate-git-repo $spanned_workdir
 
         # Unwrap for pure computation (can't fail)
         let workdir = ($spanned_workdir.value | path expand)
-        let resolved_path = (resolve-worktree-path-from-branch $spanned_branch.value $workdir)
+
+        # Find worktree by branch name from git worktree list
+        let resolved_path = (get-worktree-path-by-branch $spanned_branch.value $workdir)
+
+        if $resolved_path == null {
+            make-error $"No worktree found for branch '($spanned_branch.value)'" $spanned_branch --label "worktree not found" --hint "Use 'git worktree list' to see all worktrees"
+        }
 
         # Call gtree-remove with spanned values
-        if $force {
-            gtree-remove $resolved_path $spanned_branch $spanned_workdir --interactive --force
-        } else {
-            gtree-remove $resolved_path $spanned_branch $spanned_workdir --interactive
+        match [$force, $yes] {
+            [true, true] => { gtree-remove $resolved_path $spanned_branch $spanned_workdir --force --yes },
+            [true, false] => { gtree-remove $resolved_path $spanned_branch $spanned_workdir --force },
+            [false, true] => { gtree-remove $resolved_path $spanned_branch $spanned_workdir --yes },
+            [false, false] => { gtree-remove $resolved_path $spanned_branch $spanned_workdir }
         }
     } else {
         # Create mode
-        validate-create-mode-flags $delete_branch $force
+        validate-create-mode-flags $force $yes
         gtree-create $spanned_branch $spanned_workdir $spanned_path $spanned_base
     }
 }
@@ -59,7 +75,6 @@ export def gtree [
 def validate-remove-mode-flags [
     spanned_path?: record<value: path, span: any>
     spanned_base?: record<value: string, span: any>
-    delete_branch?: bool
 ]: nothing -> nothing {
     if $spanned_path != null {
         error make {
@@ -75,32 +90,25 @@ def validate-remove-mode-flags [
             help: "The --base-branch flag is only for creating worktrees. To remove a worktree, use: gtree <branch-name> --rm"
         }
     }
-    if $delete_branch {
-        error make {
-            msg: "Cannot use --delete-branch with --rm"
-            label: { text: "use interactive prompt instead", span: (metadata $delete_branch).span }
-            help: "gtree --rm uses an interactive prompt to ask about branch deletion"
-        }
-    }
 }
 
 # Validate flags that are only for remove mode
 def validate-create-mode-flags [
-    delete_branch?: bool
     force?: bool
+    yes?: bool
 ]: nothing -> nothing {
-    if $delete_branch {
-        error make {
-            msg: "The --delete-branch flag requires --rm"
-            label: { text: "requires --rm", span: (metadata $delete_branch).span }
-            help: "Use: gtree --rm <branch-name> --delete-branch"
-        }
-    }
     if $force {
         error make {
             msg: "The --force flag requires --rm"
             label: { text: "requires --rm", span: (metadata $force).span }
             help: "Use: gtree --rm <branch-name> --force"
+        }
+    }
+    if $yes {
+        error make {
+            msg: "The --yes flag requires --rm"
+            label: { text: "requires --rm", span: (metadata $yes).span }
+            help: "Use: gtree --rm <branch-name> --yes"
         }
     }
 }
@@ -162,34 +170,28 @@ def build-create-output [
 # Remove a git worktree by path
 #
 # Removes a worktree at the specified path, validates it's clean,
-# and optionally deletes the associated branch. Use --interactive for
-# a gum-based prompt to choose branch deletion options (local/remote).
+# and prompts for confirmation before deletion. Uses gum for interactive prompts.
 def gtree-remove [
   worktree_path: path                                 # Path to the worktree to remove (computed)
   spanned_branch: record<value: string, span: any>    # Original user input (for error reporting)
   spanned_workdir: record<value: path, span: any>     # Original user input
 
-  --delete-branch(-d)        # Also delete the branch after removing the worktree
-  --force(-f)                # Force removal of dirty worktrees; with -d, force-deletes branch
-  --interactive(-i)          # Prompt for branch deletion after removing worktree
+  --force(-f)                # Force removal of dirty worktrees and force-delete branch
+  --yes(-y)                  # Skip confirmation prompts (deletes worktree and branch)
 ]: nothing -> string {
     let workdir = ($spanned_workdir.value | path expand)
     let worktree_path = ($worktree_path | path expand)
 
-    print $"DEBUG gtree-remove: worktree_path=($worktree_path), workdir=($workdir)"
+    # print $"DEBUG gtree-remove: worktree_path=($worktree_path), workdir=($workdir)"
 
     # Validate environment with spanned values
     validate-directory-exists $spanned_workdir "working directory"
     validate-git-repo $spanned_workdir
 
-    # Get branch information (unwrap for pure query operations)
-    let branch_name = if $delete_branch or $interactive {
-        get-worktree-branch $worktree_path $workdir
-    } else {
-        null
-    }
-
-    let remote_branch = if $interactive and $branch_name != null {
+    # Get branch information BEFORE removing the worktree
+    # (once removed, it won't be in git worktree list anymore)
+    let branch_name = (get-worktree-branch $worktree_path $workdir)
+    let remote_branch = if $branch_name != null {
         get-remote-tracking-branch $branch_name $workdir
     } else {
         null
@@ -197,20 +199,45 @@ def gtree-remove [
 
     # Check for uncommitted changes (use branch span for error reporting)
     if not $force and ($worktree_path | path exists) {
-        print $"DEBUG: Checking for uncommitted changes in ($worktree_path)"
+        # print $"DEBUG: Checking for uncommitted changes in ($worktree_path)"
         validate-worktree-clean $worktree_path $spanned_branch
+    }
+
+    # Prompt 1: Confirm worktree deletion (default yes)
+    if not $yes {
+        let confirm_delete = (gum confirm $"Are you sure you want to delete ($worktree_path)?" --default)
+        if not $confirm_delete {
+            return $"(ansi yellow)Worktree deletion cancelled(ansi reset)"
+        }
     }
 
     # Remove the worktree
     let remove_msg = handle-worktree-removal $worktree_path $workdir $force
 
-    # Handle branch deletion
-    let branch_msg = if $interactive {
-        handle-branch-deletion-interactive $workdir $force $branch_name $remote_branch
-    } else if $delete_branch {
-        handle-branch-deletion-direct $workdir $force $branch_name
+    # If no branch found, just return the removal message
+    if $branch_name == null {
+        return $remove_msg
+    }
+
+    # Prompt 2: Confirm branch deletion (default no)
+    # With --yes flag, automatically delete the branch
+    let confirm_branch = if $yes {
+        true
     } else {
-        null
+        (gum confirm $"Do you want to delete the branch '($branch_name)'?" --affirmative "Yes" --negative "No")
+    }
+
+    if not $confirm_branch {
+        return $remove_msg
+    }
+
+    # Delete the branch (we already fetched remote_branch info earlier)
+    let branch_msg = if $remote_branch != null {
+        # Delete both local and remote
+        handle-branch-deletion-both $workdir $force $branch_name $remote_branch
+    } else {
+        # Delete local only
+        handle-branch-deletion-direct $workdir $force $branch_name
     }
 
     # Combine messages
@@ -226,12 +253,12 @@ def handle-worktree-removal [
     workdir: path
     force: bool
 ]: nothing -> string {
-    print $"DEBUG: Checking if worktree exists in git worktree list"
+    # print $"DEBUG: Checking if worktree exists in git worktree list"
     let exists = (worktree-exists $worktree_path $workdir)
-    print $"DEBUG: worktree_exists=($exists)"
+    # print $"DEBUG: worktree_exists=($exists)"
 
     if $exists {
-        print $"DEBUG: Attempting to remove worktree via git"
+        # print $"DEBUG: Attempting to remove worktree via git"
         if $force {
             remove-worktree-git $worktree_path $workdir --force
         } else {
@@ -240,55 +267,12 @@ def handle-worktree-removal [
         $"Worktree removed: ($worktree_path)"
     } else if ($worktree_path | path exists) {
         # Orphaned directory
-        print $"DEBUG: Orphaned worktree directory found, removing manually"
+        # print $"DEBUG: Orphaned worktree directory found, removing manually"
         remove-orphaned-directory $worktree_path
         $"(ansi yellow)Removed orphaned worktree directory: ($worktree_path)(ansi reset)"
     } else {
-        print $"DEBUG: Worktree not found in git worktree list and directory doesn't exist"
+        # print $"DEBUG: Worktree not found in git worktree list and directory doesn't exist"
         $"(ansi yellow)Worktree not found: ($worktree_path)(ansi reset)"
-    }
-}
-
-# Handle branch deletion with interactive prompt
-def handle-branch-deletion-interactive [
-    workdir: path
-    force: bool
-    branch_name?: string
-    remote_branch?: string
-]: nothing -> string {
-    if $branch_name == null {
-        return null
-    }
-
-    if not (has-gum) {
-        return $"(ansi yellow)Warning: gum is not installed. Install gum for interactive prompts, or use --delete-branch flag(ansi reset)"
-    }
-
-    # Build prompt
-    let prompt_msg = if $remote_branch != null {
-        $"Delete branch '($branch_name)' (tracking ($remote_branch))?"
-    } else {
-        $"Delete local branch '($branch_name)'?"
-    }
-
-    let options = (build-gum-options ($remote_branch != null))
-    let choice = (prompt-with-gum $prompt_msg $options)
-
-    if $choice == null {
-        return $"(ansi yellow)Branch deletion cancelled(ansi reset)"
-    }
-
-    # Handle the choice
-    match $choice {
-        "No, keep the branch" => { null },
-        "Yes, delete local branch" | "Yes, delete local only" => {
-            let result = (delete-local-branch $branch_name $workdir --force=$force)
-            $result.message
-        },
-        "Yes, delete local and remote" => {
-            handle-branch-deletion-both $workdir $force $branch_name $remote_branch
-        },
-        _ => { null }
     }
 }
 

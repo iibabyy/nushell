@@ -31,10 +31,10 @@ def gtree-create-new [
     custom_workdir?: path
 ]: nothing -> string {
     # Wrap all user-provided parameters once at entry
-    let spanned_branch = (make-spanned $branch)
-    let spanned_path = if $custom_path != null { make-spanned $custom_path } else { null }
-    let spanned_base = if $base_branch != null { make-spanned $base_branch } else { null }
-    let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD)
+    let spanned_branch = (make-spanned $branch (metadata $branch))
+    let spanned_path = if $custom_path != null { make-spanned $custom_path (metadata $custom_path) } else { null }
+    let spanned_base = if $base_branch != null { make-spanned $base_branch (metadata $base_branch) } else { null }
+    let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD (metadata $custom_workdir))
 
     # Pass spanned values down - they preserve spans automatically
     validate-git-repo $spanned_workdir

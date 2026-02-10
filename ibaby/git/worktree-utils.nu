@@ -101,12 +101,8 @@ export def validate-path-available [
     spanned_path?: record<value: path, span: any>      # Original user input
 ]: nothing -> nothing {
     if ($target | path exists) {
-        let span = if $spanned_path != null { $spanned_path.span } else { null }
-        make-error-with-span {
-            msg: $"Target path already exists: ($target)"
-            label: { text: "path already exists", span: $span }
-            help: (if $spanned_path == null { "Use --path to specify a different worktree location" } else { null })
-        }
+        let hint = if $spanned_path == null { "Use --path to specify a different worktree location" } else { null }
+        make-error $"Target path already exists: ($target)" $spanned_path --label "path already exists" --hint $hint
     }
 }
 
@@ -141,7 +137,7 @@ export def run-bun-install [
 ]: nothing -> nothing {
     let package_json_path = $target | path join "package.json"
 
-    if ((package_json_path | path exists) and has-bun) {
+    if (($package_json_path | path exists) and has-bun) {
         do -i { ^bun install --cwd $target }
     }
 }
@@ -163,6 +159,7 @@ export def get-worktree-list [
     workdir: path = "."
 ]: nothing -> table {
     ^git -C $workdir worktree list
+    | lines
     | split column -r '\s+' path hash branch
 }
 
@@ -278,7 +275,7 @@ export def delete-local-branch [
     } else {
         {
             success: true,
-            message: $"(ansi green)Local branch deleted: ($branch)(ansi reset)"
+            message: $"branch removed: ($branch)"
         }
     }
 }
@@ -356,12 +353,21 @@ export def resolve-worktree-path-for-removal [
     }
 }
 
-# Resolve worktree path from branch name
-export def resolve-worktree-path-from-branch [
+# Find worktree path by branch name from git worktree list
+# Returns null if no worktree exists for the branch
+export def get-worktree-path-by-branch [
     branch: string
-    workdir: path
+    workdir: path = "."
 ]: nothing -> path {
-    let safe_name = ($branch | str replace --all "/" "-")
-    let worktree_path = ($workdir | path join ".worktrees" $safe_name | path expand)
-    $worktree_path
+    let worktree_info = (
+        get-worktree-list $workdir
+        | where branch == $"[($branch)]"
+        | get 0?
+    )
+
+    if $worktree_info == null {
+        null
+    } else {
+        $worktree_info.path
+    }
 }

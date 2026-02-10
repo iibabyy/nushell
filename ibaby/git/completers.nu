@@ -7,11 +7,13 @@ export def no_completion [context: string] {
 export def git_branches [context: string] {
     try {
         let branches = (^git branch --list --format='%(refname:short)' | lines)
-        if ($context | is-empty) {
-            $branches | each { |branch| { value: $branch, description: "" } }
+        let branches = if ($context | is-empty) {
+            $branches 
         } else {
-            $branches | where { |branch| $branch =~ $context } | each { |branch| { value: $branch, description: "" } }
+            $branches | where { |branch| $branch =~ $context }
         }
+
+        $branches | each { |branch| { value: $branch, description: "" } }
     } catch {
         []
     }

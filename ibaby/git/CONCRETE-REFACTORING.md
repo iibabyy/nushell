@@ -49,13 +49,16 @@ def gtree-create [
 ### span-utils.nu (new file)
 ```nu
 # Core utilities for span preservation
-export def make-spanned [value: any]: nothing -> record<value: any, span: any> {
-    { value: $value, span: (metadata $value | get span) }
+# NOTE: Metadata must be passed explicitly because calling (metadata $value)
+# inside the function would capture the span at the function's call site,
+# not from where the user originally provided the value.
+export def make-spanned [value: any, meta: record]: nothing -> record<value: any, span: any> {
+    { value: $value, span: ($meta | get span) }
 }
 
-export def make-spanned-default [value?: any, default: any]: nothing -> record<value: any, span: any> {
+export def make-spanned-default [value: any, default: any, meta?: record]: nothing -> record<value: any, span: any> {
     if $value != null {
-        { value: $value, span: (metadata $value | get span) }
+        { value: $value, span: ($meta | get span) }
     } else {
         { value: $default, span: null }
     }
@@ -229,10 +232,10 @@ def gtree-create [
     custom_workdir?: path
 ]: nothing -> string {
     # STEP 1: Wrap all user-provided parameters at entry point
-    let spanned_branch = (make-spanned $branch)
-    let spanned_path = if $custom_path != null { make-spanned $custom_path } else { null }
-    let spanned_base = if $base_branch != null { make-spanned $base_branch } else { null }
-    let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD)
+    let spanned_branch = (make-spanned $branch (metadata $branch))
+    let spanned_path = if $custom_path != null { make-spanned $custom_path (metadata $custom_path) } else { null }
+    let spanned_base = if $base_branch != null { make-spanned $base_branch (metadata $base_branch) } else { null }
+    let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD (metadata $custom_workdir))
 
     # STEP 2: Validate with spanned values (pass full spanned values)
     validate-git-repo $spanned_workdir
@@ -281,9 +284,9 @@ let base_branch_span = if $base_branch != null { (metadata $base_branch).span } 
 
 **After:**
 ```nu
-let spanned_path = if $custom_path != null { make-spanned $custom_path } else { null }
-let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD)
-let spanned_base = if $base_branch != null { make-spanned $base_branch } else { null }
+let spanned_path = if $custom_path != null { make-spanned $custom_path (metadata $custom_path) } else { null }
+let spanned_workdir = (make-spanned-default $custom_workdir $env.PWD (metadata $custom_workdir))
+let spanned_base = if $base_branch != null { make-spanned $base_branch (metadata $base_branch) } else { null }
 ```
 
 ### 2. Cleaner Function Signatures
