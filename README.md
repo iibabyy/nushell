@@ -23,17 +23,20 @@ nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir -
 
 > Or if you already have a config directory, backup and clone:
 > ```bash
-> nu -c '
-> let config_path = $nu.default-config-dir
-> let backup_path = ($config_path | path dirname | path join nushell.backup)
->
-> # Save the previous nushell directory and clone the new one
-> mv $config_path $backup_path
-> git clone https://github.com/iibabyy/nushell.git $config_path --recursive
->
-> # Copy your command history
-> cp $backup_path/history.txt $config_path/history.txt
-> '
+ nu -c '
+ let config_path = $nu.default-config-dir
+ let backup_path = $"($config_path | path dirname)/nushell.backup"
+
+ # Save the previous nushell directory and clone the new one
+ mv $config_path $backup_path
+ git clone https://github.com/iibabyy/nushell.git $config_path --recursive
+
+ # Copy your command history
+ let history_path = $"($backup_path)/history.txt"
+ if ($history_path | path exists) {
+ 	cp $history_path $nu.history-path
+ }
+ '
 > ```
 
 ## Requirements
