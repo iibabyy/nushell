@@ -6,7 +6,7 @@ Personal Nushell configuration with custom prompt, utilities and aliases.
 
 ### Install Nushell
 
-First, install [Nushell](https://github.com/nushell/nushell):
+First, install [Nushell](https://github.com/nushell/nushell)
 
 **Using cargo:**
 ```bash
