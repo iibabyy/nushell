@@ -4,8 +4,21 @@ Personal Nushell configuration with custom prompt, utilities and aliases.
 
 ## Quick Installation
 
+### Install Nushell
+
+First, install [Nushell](https://github.com/nushell/nushell):
+
+**Using cargo:**
 ```bash
-git clone https://github.com/iibabyy/nushell.git ~/.config/nushell --recursive
+cargo install nu --locked
+```
+
+For more installation options, see the [official installation guide](https://www.nushell.sh/book/installation.html).
+
+### Install This Configuration
+
+```bash
+nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir --recursive'
 ```
 
 > Or if you already have a config directory, backup and clone:
