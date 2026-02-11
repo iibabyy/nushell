@@ -42,9 +42,13 @@ nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir -
 ## Requirements
 
 - [Nushell](https://www.nushell.sh/) (v0.90+)
-- [gum](https://github.com/charmbracelet/gum) - For interactive CLI components
+
+**Recommended:**
 - [zoxide](https://github.com/ajeetdsouza/zoxide) - For smart directory jumping
-- [bun](https://bun.sh/) (optional) - For JavaScript project worktree setup
+
+**Optional:**
+- [gum](https://github.com/charmbracelet/gum) - For interactive CLI components
+- [bun](https://bun.sh/) - For JavaScript project worktree setup (falls back to npm)
 
 ## Features
 
