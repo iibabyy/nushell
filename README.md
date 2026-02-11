@@ -57,20 +57,14 @@ nu
 
 ## Features
 
-### Git Utilities
-- `gtree` - Create and remove git worktrees interactively
-- Custom git completions and aliases
+#### Custom Prompt
+- Git-aware prompt with branch display, upstream tracking (↑ ↓ indicators)
 
-### Interactive CLI utilities (gum wrappers)
-- Enhanced input, selection, and filtering commands
-- Styled output and formatting helpers
+#### Shell Completions
+- Completions for git, gh, docker, cargo, npm, rustup, and claude with fish fallback for external commands
 
-### Completions
-Integrated completions for:
-- Git, GitHub CLI (gh)
-- Docker, Cargo, npm, rustup, claude
-
-Fallback to fish completions for unsupported commands
+#### Git Worktree Management
+- **`gtree`** - Simply create/remove git worktrees
 
 ## Structure
 
