@@ -72,7 +72,7 @@ Fallback to fish completions for unsupported commands
 ```
 ╭── config.nu           # Main configuration file
 ├── env.nu              # Environment setup
-├── ibaby/              # Custom modules
+├── custom/             # Custom modules
 │   ├── git/           # Git utilities and worktree management
 │   ├── gum/           # Gum wrapper functions
 │   ├── completions/   # Custom completions
@@ -93,4 +93,4 @@ exec nu
 
 Edit `config.nu` to modify imports and settings.
 
-Add your own modules in `ibaby/` and export them in `ibaby/mod.nu`.
+Add your own modules in `custom/` and export them in `custom/mod.nu`.

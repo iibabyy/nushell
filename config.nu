@@ -10,4 +10,4 @@ source $zoxide_path
 # ---------------------
 overlay use nupm/nupm --prefix
 
-use ($nu.default-config-dir | path join ibaby) *
+use ($nu.default-config-dir | path join custom) *
