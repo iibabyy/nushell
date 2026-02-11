@@ -131,14 +131,22 @@ export def has-bun []: nothing -> bool {
     which bun | is-not-empty
 }
 
-# Run bun install in a directory
+export def has-npm []: nothing -> bool {
+    which npm | is-not-empty
+}
+
+# Run bun install in a directory, fallback to npm if bun doesn't exist
 export def run-bun-install [
     target: path
 ]: nothing -> nothing {
     let package_json_path = $target | path join "package.json"
 
-    if (($package_json_path | path exists) and has-bun) {
-        do -i { ^bun install --cwd $target }
+    if ($package_json_path | path exists) {
+        if (has-bun) {
+            do -i { ^bun install --cwd $target }
+        } else if (has-npm) {
+            do -i { ^npm install --prefix $target }
+        }
     }
 }
 
