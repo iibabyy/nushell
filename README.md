@@ -18,7 +18,7 @@ For more installation options, see the [official installation guide](https://www
 ### Install This Configuration
 
 ```bash
-nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir --recursive'
+nu -c 'git clone https://github.com/iibabyy/nushell-config.git $nu.default-config-dir --recursive'
 ```
 
 > Or if you already have a config directory, backup and clone:
@@ -29,7 +29,7 @@ nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir -
 >
 >   # Save the previous nushell directory and clone the new one
 >   mv $config_path $backup_path
->   git clone https://github.com/iibabyy/nushell.git $config_path --recursive
+>   git clone https://github.com/iibabyy/nushell-config.git $config_path --recursive
 >
 >   # Copy your command history
 >   let history_path = $"($backup_path)/history.txt"
