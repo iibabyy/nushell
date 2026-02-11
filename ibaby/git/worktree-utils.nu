@@ -306,6 +306,36 @@ export def has-gum []: nothing -> bool {
     which gum | is-not-empty
 }
 
+# Basic confirmation prompt using print and input (fallback when gum is not available)
+export def confirm-basic [
+    prompt: string
+    --default  # If true, default is yes; otherwise default is no
+]: nothing -> bool {
+    let default_text = if $default { "Y/n" } else { "y/N" }
+    print $"($prompt) \(($default_text)\)"
+
+    let response = (input "> " | str trim | str downcase)
+
+    # Handle empty input (use default)
+    if ($response | is-empty) {
+        return $default
+    }
+
+    # Check for yes/y
+    if $response == "y" or $response == "yes" {
+        return true
+    }
+
+    # Check for no/n
+    if $response == "n" or $response == "no" {
+        return false
+    }
+
+    # Invalid input, use default
+    print $"Invalid input, using default: (if $default { 'yes' } else { 'no' })"
+    $default
+}
+
 # Build gum prompt options for branch deletion
 export def build-gum-options [
     has_remote: bool

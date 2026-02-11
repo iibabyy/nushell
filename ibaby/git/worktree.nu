@@ -205,11 +205,16 @@ def gtree-remove [
     }
 
     # PROMPTING PHASE: Ask user for all confirmations BEFORE making any changes
+    # Check if gum is available
+    let use_gum = (has-gum)
+
     # Prompt 1: Confirm worktree deletion (default yes)
     let confirm_delete = if $yes {
         true
-    } else {
+    } else if $use_gum {
         (gum confirm $"Are you sure you want to delete ($worktree_path)?" --default)
+    } else {
+        (confirm-basic $"Are you sure you want to delete ($worktree_path)?" --default)
     }
 
     if not $confirm_delete {
@@ -221,8 +226,10 @@ def gtree-remove [
         false
     } else if $yes {
         true
-    } else {
+    } else if $use_gum {
         (gum confirm $"Do you want to delete the branch '($branch_name)'?" --affirmative "Yes" --negative "No")
+    } else {
+        (confirm-basic $"Do you want to delete the branch '($branch_name)'?")
     }
 
     # EXECUTION PHASE: Now perform all the actual deletions
