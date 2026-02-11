@@ -23,11 +23,16 @@ nu -c 'git clone https://github.com/iibabyy/nushell.git $nu.default-config-dir -
 
 > Or if you already have a config directory, backup and clone:
 > ```bash
-> mv ~/.config/nushell ~/.config/nushell.backup
-> git clone https://github.com/iibabyy/nushell.git ~/.config/nushell --recursive
+> nu -c '
+> let config_path = $nu.default-config-dir
+> let backup_path = ($config_path | path dirname | path join nushell.backup)
+>
+> mv $config_path $backup_path
+> git clone https://github.com/iibabyy/nushell.git $config_path --recursive
 >
 > # Copy your command history
-> cp ~/.config/nushell.backup/history.txt ~/.config/nushell/
+> cp $backup_path/history.txt $config_path/history.txt
+> '
 > ```
 
 ## Requirements
@@ -57,8 +62,7 @@ Fallback to fish completions for unsupported commands
 ## Structure
 
 ```
-~/.config/nushell/
-├── config.nu           # Main configuration file
+╭── config.nu           # Main configuration file
 ├── env.nu              # Environment setup
 ├── ibaby/              # Custom modules
 │   ├── git/           # Git utilities and worktree management
@@ -79,6 +83,6 @@ exec nu
 
 ## Customization
 
-Edit `~/.config/nushell/config.nu` to modify imports and settings.
+Edit `config.nu` to modify imports and settings.
 
-Add your own modules in `~/.config/nushell/ibaby/` and export them in `ibaby/mod.nu`.
+Add your own modules in `ibaby/` and export them in `ibaby/mod.nu`.

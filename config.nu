@@ -12,4 +12,4 @@ if not (which ^zoxide | is-empty) {
 # ---------------------
 overlay use nupm/nupm --prefix
 
-use ~/.config/nushell/ibaby/ *
+use ($nu.default-config-dir | path join ibaby) *
