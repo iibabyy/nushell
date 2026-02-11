@@ -58,7 +58,7 @@ nu
 ## Features
 
 #### Custom Prompt
-- Git-aware prompt with branch display, upstream tracking (↑ ↓ indicators)
+- Git-aware prompt with branch display, upstream tracking (↑ ↓ indicators) with background fetching
 
 #### Shell Completions
 - Completions for git, gh, docker, cargo, npm, rustup, and claude with fish fallback for external commands
