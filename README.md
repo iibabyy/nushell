@@ -2,7 +2,7 @@
 
 Personal Nushell configuration with custom prompt, utilities and aliases.
 
-## Quick Installation
+## Quick Start
 
 ### Install Nushell
 
@@ -38,6 +38,11 @@ nu -c 'git clone https://github.com/iibabyy/nushell-config.git $nu.default-confi
 >   }
 > '
 > ```
+
+### Run Nushell
+```bash
+nu
+```
 
 ## Requirements
 
@@ -80,13 +85,6 @@ Fallback to fish completions for unsupported commands
 │   ├── prompt.nu      # Custom prompt
 │   └── hooks.nu       # Shell hooks
 └── completions/        # External completions
-```
-
-## Usage
-
-After installation, restart Nushell with:
-```nushell
-exec nu
 ```
 
 ## Customization
