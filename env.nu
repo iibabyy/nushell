@@ -9,22 +9,21 @@ if not (which ^bun | is-empty) {
 }
 
 # Cargo Target Directory
-if not (which ^cargo | is-empty) {
-	path add (
-		$env.CARGO_HOME?
-		| default ($env.HOME | path join .cargo)
-		| path join bin
-	)
+path add (
+	$env.CARGO_HOME?
+	| default ($env.HOME | path join .cargo)
+	| path join bin
+)
 
-	$env.CARGO_TARGET_DIR = (
-		$env.CARGO_HOME?
-		| default ($env.HOME | path join .cargo)
-		| path join "target"
-	)
-}
+$env.CARGO_TARGET_DIR = (
+	$env.CARGO_HOME?
+	| default ($env.HOME | path join .cargo)
+	| path join "target"
+)
 
 # Go Binary Path
-if not (which ^go | is-empty) {
+let go_path = (which go | get 0?.path | default /usr/local/go/bin/go )
+if not (which go_path | is-empty) {
 	path add (^go env GOPATH)
 	path add (^go env GOBIN)
 }
