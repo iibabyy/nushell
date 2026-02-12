@@ -42,3 +42,9 @@ if not ($has_zoxide) {
 if $has_zoxide and (ls $zoxide_path | get 0.size) == 0B {
     ^zoxide init nushell | save -f $zoxide_path
 }
+
+if not (which starship | is-empty) {
+	mkdir ($nu.data-dir | path join "vendor/autoload")
+	starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
+	# starship preset catppuccin-powerline -o ~/.config/starship.toml
+}
