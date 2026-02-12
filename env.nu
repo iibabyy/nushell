@@ -4,16 +4,18 @@ $env.config.buffer_editor = "code"
 $env.config.show_banner = false
 
 # Bun
-if not (which ^bun | is-empty) {
-	path add $"($env.HOME)/.bun/bin"
-}
+path add $"($env.HOME)/.bun/bin"
 
-# Cargo Target Directory
-path add (
-	$env.CARGO_HOME?
-	| default ($env.HOME | path join .cargo)
-	| path join bin
-)
+# Cargo
+path add (do {
+	let cargo_home = $env.CARGO_HOME?
+		| default ($env.HOME | path join .cargo)
+		| path join bin
+	
+	if ($cargo_home | path exists) {
+		$cargo_home
+	}
+})
 
 $env.CARGO_TARGET_DIR = (
 	$env.CARGO_HOME?
@@ -22,11 +24,15 @@ $env.CARGO_TARGET_DIR = (
 )
 
 # Go Binary Path
-let go_path = (which go | get 0?.path | default /usr/local/go/bin/go )
-if not (which go_path | is-empty) {
-	path add (^go env GOPATH)
-	path add (^go env GOBIN)
-}
+path add (do {
+	let go_path = (which go | get 0?.path | default /usr/local/go/bin/go )
+	if not (which $go_path | is-empty) and ($go_path | path exists) {
+		[
+			($go_path | path dirname),
+			(do { ^$go_path env GOPATH } | path join bin),
+		]
+	}
+})
 
 # Zoxide init file
 const zoxide_path = ($nu.default-config-dir | path join "zoxide.nu")
