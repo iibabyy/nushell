@@ -1,38 +1,43 @@
-export-env {
-    let fish_completer = {|spans|
-        try {
-            let cmd = $spans | str join ' '
-            ^fish --command $"complete --do-complete='($cmd)'"
-            | from tsv --flexible --noheaders --no-infer
-            | rename value description
-        } catch {
-            []
-        }
+export def fish_completer [argv: list<string>] {
+    try {
+		fish --command $"complete '--do-complete=($argv | str replace --all "'" "\\'" | str join ' ')'"
+			| from tsv --flexible --noheaders --no-infer
+			| rename value description
+			| update value {|row|
+				let value = $row.value
+				let need_quote = ['\' ',' '[' ']' '(' ')' ' ' '\t' "'" '"' "`"] | any {$in in $value}
+				if ($need_quote and ($value | path exists)) {
+					let expanded_path = if ($value starts-with ~) {$value | path expand --no-symlink} else {$value}
+					$'"($expanded_path | str replace --all "\"" "\\\"")"'
+				} else {$value}
+			}
+    } catch {
+        return null
+    }
+}
+
+export def custom_completer [argv: list<string>] {
+    let lookup = (which $argv.0 | get 0?)
+    let argv = if ($lookup | get definition?) != null {
+        let definition = ($lookup | get definition | ^xargs -n 1 | lines)
+        $argv | skip 1 | prepend $definition
+    } else {
+        $argv
     }
 
-    let z_completer = {|spans|
-        # 1. Safely get the command name
-        let cmd = $spans.0
-        let lookup = (which $cmd | get --optional 0)
+	if ($argv | is-empty) {
+		return null
+	}
 
-        let supported_cmds = ["z", "zi", "zoxide"]
-
-        # 2. Check if the command is one of our zoxide aliases
-        let is_supported = ($cmd in $supported_cmds)
-
-        # 3. Logic: If it's a known internal Nu command AND NOT a zoxide command,
-        # return empty list to allow native Nushell completions.
-        # (null would fall back to file completion, which overrides native flags)
-        if ($lookup != null) and ($lookup.type != "external") and (not $is_supported) {
-            []
-        } else {
-            do $fish_completer $spans
-        }
-    }
-
-    $env.config.completions.external = {
-        enable: true
-        max_results: 100
-        completer: $z_completer
+	let cmd_type = (which $argv.0 | get type?)
+	if $cmd_type == "external" {
+        let fish_completions = fish_completer $argv
+		if $fish_completions == null or ($fish_completions | is-empty) {
+			null
+		} else {
+			$fish_completions
+		}
+    } else {
+        null
     }
 }
