@@ -3,3 +3,4 @@ history.txt
 nupm/*
 zoxide.nu
 git-fetch-all.nu
+.cache
