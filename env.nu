@@ -50,7 +50,14 @@ if $has_zoxide and (ls $zoxide_path | get 0.size) == 0B {
 }
 
 if not (which starship | is-empty) {
-	mkdir ($nu.data-dir | path join "vendor/autoload")
-	starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
-	# starship preset catppuccin-powerline -o ~/.config/starship.toml
+	let starship_init = ($nu.data-dir | path join "vendor/autoload/starship.nu")
+	if not ($starship_init | path exists) {
+		mkdir ($nu.data-dir | path join "vendor/autoload")
+		starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
+	}
+
+	let starship_config = $env.STARSHIP_CONFIG? | default ~/.config/starship.toml
+	if not ($starship_config | path exists) {
+		starship preset catppuccin-powerline -o ~/.config/starship.toml
+	}
 }
