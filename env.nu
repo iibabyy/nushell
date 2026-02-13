@@ -35,12 +35,11 @@ path add (do {
 })
 
 # Zoxide init file
-const zoxide_path = ($nu.default-config-dir | path join "zoxide.nu")
+const cache = ($nu.default-config-dir | path join .cache)
+const zoxide_path = ($cache | path join "zoxide.nu")
 let has_zoxide = (which zoxide | is-not-empty)	
 
-if not ($has_zoxide) {
-	rm $zoxide_path
-} else if not ($zoxide_path | path exists) {
+if $has_zoxide and not ($zoxide_path | path exists) {
 	touch $zoxide_path
 }
 
@@ -50,9 +49,9 @@ if $has_zoxide and (ls $zoxide_path | get 0.size) == 0B {
 }
 
 if not (which starship | is-empty) {
-	let starship_init = ($nu.data-dir | path join "vendor/autoload/starship.nu")
+	const starship_init = ($nu.data-dir | path join "vendor/autoload/starship.nu")
 	if not ($starship_init | path exists) {
-		mkdir ($nu.data-dir | path join "vendor/autoload")
+		mkdir ($starship_init | path dirname)
 		starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
 	}
 
