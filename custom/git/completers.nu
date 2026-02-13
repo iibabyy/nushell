@@ -43,3 +43,27 @@ export def git_worktree_branches [context: string] {
         | each { |branch| { value: $branch, description: "" } }
     }
 }
+
+# Context-aware completer for the gtree command
+# In --rm mode: returns existing worktree branches (for removal)
+# In create mode: returns nothing (user types a new branch name)
+export def gtree_branches [context: string] {
+    if not ($context | str contains "--rm") {
+        return []
+    }
+
+    let result = (do -i { ^git worktree list | complete })
+
+    if $result.exit_code != 0 {
+        return []
+    }
+
+    $result.stdout
+    | lines
+    | split column -r '\s+' path hash branch
+    | where branch != null and branch != ""
+    | each { |row|
+        let branch = ($row.branch | str replace -r '^\[' '' | str replace -r '\]$' '')
+        { value: $branch, description: $row.path }
+    }
+}

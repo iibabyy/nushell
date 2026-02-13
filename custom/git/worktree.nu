@@ -1,4 +1,4 @@
-use completers.nu [git_branches git_worktree_branches]
+use completers.nu [git_branches gtree_branches]
 use utils.nu cp-gitignored
 use worktree-utils.nu *
 use span-utils.nu [make-spanned make-spanned-default make-error]
@@ -26,7 +26,7 @@ use ../gum "gum confirm"
 @example "Remove a worktree by branch name (with confirmation prompts)" {gtree feature/new-auth --rm}
 @example "Remove worktree and branch without prompts" {gtree feature/new-auth --rm --yes}
 export def gtree [
-  branch: string@git_worktree_branches  # Name of the branch (to create or remove with --rm)
+  branch: string@gtree_branches  # Name of the branch (to create or remove with --rm)
   --rm                         # Remove mode: remove existing worktree for this branch
   --path(-p): path             # Custom path for the worktree (defaults to <workdir>/.worktrees/<branch>)
   --base-branch: string@git_branches  # Base branch to branch from (defaults to current branch)
