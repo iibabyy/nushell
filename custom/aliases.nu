@@ -8,6 +8,7 @@ export alias ga = git add
 export alias gc = git commit -m
 export alias gcl = git clone
 export alias gp = git push
+export alias gst = git status
 
 # Cargo Aliases
 export alias cr = cargo run

@@ -1,4 +1,3 @@
-export use completions.nu *
 export use claude.nu *
 
 # nu_scripts custom-completions (https://github.com/nushell/nu_scripts/tree/main/custom-completions)
@@ -20,6 +19,11 @@ export use tcpdump-completions.nu *
 export use vscode-completions.nu *
 export use zoxide-completions.nu *
 
+export use completions.nu *
+
 export-env {
-    use completions.nu
+    $env.config.completions.external = {
+        enable: true
+        completer: {|spans| custom_completer $spans }
+    }
 }
