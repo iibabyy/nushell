@@ -59,10 +59,51 @@ if (which zoxide | is-not-empty) {
 }
 
 # Populate carapace init if installed and file is empty
-# Falls back to zsh-based completer when carapace is unavailable
+# When carapace is available with zsh, creates a cascading completer (carapace → zsh)
+# Falls back to zsh-only completer when carapace is unavailable
+# To regenerate: delete .cache/carapace.nu and restart nushell
 if (which carapace | is-not-empty) {
   if (ls $carapace_path | get 0.size) == 0B {
-    ^carapace _carapace nushell | save -f $carapace_path
+    let carapace_init = (^carapace _carapace nushell)
+    if (which zsh | is-not-empty) {
+      # Combine carapace with zsh fallback for commands carapace can't complete
+      let zsh_wrapper = r#'
+# Zsh fallback: try carapace first, fall back to zsh completions
+let _carapace_completer = $env.config.completions.external.completer
+
+let zsh_completer = {|spans|
+  let expanded_alias = (scope aliases | where name == $spans.0 | $in.0?.expansion?)
+  let spans = (if $expanded_alias != null {
+    $spans | skip 1 | prepend ($expanded_alias | split row " " | take 1)
+  } else {
+    $spans
+  })
+
+  let command = ($spans | str join " ")
+  let result = (do {
+    ^zsh -c $"autoload -Uz compinit; compinit -C; capture\(\) { compadd\(\) { print -l -- \${@[-1]}; builtin compadd \"$@\" }; _main_complete \"$@\" }; capture ($command)"
+  } | complete)
+
+  if $result.exit_code != 0 or ($result.stdout | str trim | is-empty) {
+    return null
+  }
+
+  $result.stdout | lines | where { $in != "" } | each {|line| { value: $line } }
+}
+
+$env.config.completions.external.completer = {|spans|
+  let carapace_result = (try { do $_carapace_completer $spans } catch { null })
+  if ($carapace_result != null) and ($carapace_result | is-not-empty) {
+    $carapace_result
+  } else {
+    do $zsh_completer $spans
+  }
+}
+'#
+      [$carapace_init, $zsh_wrapper] | str join "\n" | save -f $carapace_path
+    } else {
+      $carapace_init | save -f $carapace_path
+    }
   }
 } else if (which zsh | is-not-empty) {
   if (ls $carapace_path | get 0.size) == 0B {
