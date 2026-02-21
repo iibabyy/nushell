@@ -83,7 +83,7 @@ nu
 - Git-aware prompt with branch display, upstream tracking (↑ ↓ indicators) with background fetching
 
 #### Shell Completions
-- Completions for git, gh, docker, cargo, npm, rustup, and claude with fish fallback for external commands
+- Completions for claude with carapace for external commands (falls back to zsh when carapace can't complete)
 
 #### Git Worktree Management
 - **`gtree`** - Simply create/remove git worktrees
