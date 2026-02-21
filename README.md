@@ -15,6 +15,31 @@ cargo install nu --locked
 
 For more installation options, see the [official installation guide](https://www.nushell.sh/book/installation.html).
 
+### Install Carapace (Recommended)
+
+[Carapace](https://carapace-sh.github.io/carapace-bin/install.html) provides shell completions for many commands. This configuration uses it but will work without it.
+
+**Linux:**
+
+```bash
+# Homebrew
+brew install carapace
+
+# AUR (Arch Linux)
+pamac install carapace-bin
+
+# Nix
+nix-shell -p carapace
+```
+
+**macOS:**
+
+```bash
+brew install carapace
+```
+
+For more installation options, see the [official installation guide](https://carapace-sh.github.io/carapace-bin/install.html).
+
 ### Install This Configuration
 
 ```bash
@@ -49,6 +74,7 @@ nu
 - [Nushell](https://www.nushell.sh/) (v0.90+)
 
 **Recommended:**
+- [carapace](https://carapace-sh.github.io/carapace-bin/install.html) - For shell completions
 - [zoxide](https://github.com/ajeetdsouza/zoxide) - For smart directory jumping
 
 **Optional:**
