@@ -1,4 +1,34 @@
-def "nu-complete zoxide import" [] {
+def "nu-complete zoxide path" [context: string] {
+    let args = $context | split row ' ' | skip 1 |  where ($it | is-not-empty)
+    let completions = ^zoxide query --list --score ...$args | lines | where ($it | is-not-empty) | each {|line|
+        let parts = $line | str trim | split row ' ' | where ($it | is-not-empty)
+        let score = $parts.0 | into float
+        let full_path = $parts | skip 1 | str join ' '
+        let display = $full_path | str replace $env.HOME '~'
+        let value = $full_path | str replace $"($env.HOME)/" ''
+        { value: $value, description: $"($display) | score: ($score)", score: $score }
+    } | sort-by score --reverse | each {|row| { value: $row.value, description: $row.description } }
+
+    { completions: $completions, options: { sort: false, completion_algorithm: substring } }
+}
+
+export def --env --wrapped z [...rest: string@"nu-complete zoxide path"] {
+    let path = match $rest {
+        [] => {'~'},
+        [ '-' ] => {'-'},
+        [ $arg ] if ($arg | path expand | path type) == 'dir' => {$arg}
+        _ => {
+            ^zoxide query --exclude $env.PWD -- ...$rest | str trim -r -c "\n"
+        }
+    }
+    cd $path
+}
+
+export def --env --wrapped zi [...rest: string@"nu-complete zoxide path"] {
+    cd $'(^zoxide query --interactive -- ...$rest | str trim -r -c "\n")'
+}
+
+def "nu-complete-zoxide-import" [] {
   ["autojump", "z"]
 }
 
@@ -20,7 +50,7 @@ export extern "zoxide edit" [ ]
 
 # Import entries from another application
 export extern "zoxide import" [
-  --from: string@"nu-complete zoxide import"  # Application to import from
+  --from: string@nu-complete-zoxide-import  # Application to import from
   --merge                                     # Merge into existing database
 ]
 
