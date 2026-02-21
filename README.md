@@ -22,14 +22,10 @@ For more installation options, see the [official installation guide](https://www
 **Linux:**
 
 ```bash
-# Homebrew
-brew install carapace
+# /etc/apt/sources.list.d/fury.list
+deb [trusted=yes] https://apt.fury.io/rsteube/ /
 
-# AUR (Arch Linux)
-pamac install carapace-bin
-
-# Nix
-nix-shell -p carapace
+sudo apt-get update && sudo apt-get install carapace-bin
 ```
 
 **macOS:**
