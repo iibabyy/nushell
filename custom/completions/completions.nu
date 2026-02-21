@@ -19,7 +19,7 @@ export def fish_completer [argv: list<string>] {
 export def custom_completer [argv: list<string>] {
     let lookup = (which $argv.0 | get 0?)
     let argv = if ($lookup | get definition?) != null {
-        let definition = ($lookup | get definition | ^xargs -n 1 | lines)
+        let definition = ($lookup | get definition | split row ' ' | where { $in != '' })
         $argv | skip 1 | prepend $definition
     } else {
         $argv

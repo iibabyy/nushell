@@ -2,6 +2,7 @@
 
 def "nu-complete claude subcommands" [] {
     [
+        { value: "auth", description: "Manage authentication" }
         { value: "doctor", description: "Check the health of your Claude Code auto-updater" }
         { value: "install", description: "Install Claude Code native build" }
         { value: "mcp", description: "Configure and manage MCP servers" }
@@ -9,6 +10,10 @@ def "nu-complete claude subcommands" [] {
         { value: "setup-token", description: "Set up a long-lived authentication token" }
         { value: "update", description: "Check for updates and install if available" }
     ]
+}
+
+def "nu-complete claude effort" [] {
+    [ "low" "medium" "high" ]
 }
 
 def "nu-complete claude output-format" [] {
@@ -28,7 +33,7 @@ def "nu-complete claude model" [] {
         { value: "sonnet", description: "Claude Sonnet (latest)" }
         { value: "opus", description: "Claude Opus (latest)" }
         { value: "haiku", description: "Claude Haiku (latest)" }
-        { value: "claude-sonnet-4-5-20250929", description: "Claude Sonnet 4.5" }
+        { value: "claude-sonnet-4-6", description: "Claude Sonnet 4.6" }
         { value: "claude-opus-4-6", description: "Claude Opus 4.6" }
         { value: "claude-haiku-4-5-20251001", description: "Claude Haiku 4.5" }
     ]
@@ -295,6 +300,7 @@ export def --wrapped main [
     --disable-slash-commands                                            # Disable all skills
     --disallowedTools: string                                           # Comma/space-separated tool names to deny
     --disallowed-tools: string                                          # Comma/space-separated tool names to deny
+    --effort: string@"nu-complete claude effort"                        # Effort level for the session (low, medium, high)
     --fallback-model: string@"nu-complete claude model"                 # Fallback model when default is overloaded
     --file: path                                                        # File resources to download at startup
     --fork-session                                                      # Create a new session ID when resuming
@@ -359,6 +365,41 @@ export extern "claude update" [
 # Check for updates and install if available (alias)
 export extern "claude upgrade" [
     --help(-h)                                                          # Display help
+]
+
+# --- Auth commands ---
+
+def "nu-complete claude auth subcommands" [] {
+    [
+        { value: "login", description: "Sign in to your Anthropic account" }
+        { value: "logout", description: "Log out from your Anthropic account" }
+        { value: "status", description: "Show authentication status" }
+    ]
+}
+
+# Manage authentication
+export extern "claude auth" [
+    command?: string@"nu-complete claude auth subcommands"               # Auth subcommand
+    --help(-h)                                                          # Display help
+]
+
+# Sign in to your Anthropic account
+export extern "claude auth login" [
+    --email: string                                                     # Pre-populate email address on the login page
+    --help(-h)                                                          # Display help
+    --sso                                                               # Force SSO login flow
+]
+
+# Log out from your Anthropic account
+export extern "claude auth logout" [
+    --help(-h)                                                          # Display help
+]
+
+# Show authentication status
+export extern "claude auth status" [
+    --help(-h)                                                          # Display help
+    --json                                                              # Output as JSON (default)
+    --text                                                              # Output as human-readable text
 ]
 
 # --- MCP commands ---

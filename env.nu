@@ -59,9 +59,42 @@ if (which zoxide | is-not-empty) {
 }
 
 # Populate carapace init if installed and file is empty
+# Falls back to zsh-based completer when carapace is unavailable
 if (which carapace | is-not-empty) {
   if (ls $carapace_path | get 0.size) == 0B {
     ^carapace _carapace nushell | save -f $carapace_path
+  }
+} else if (which zsh | is-not-empty) {
+  if (ls $carapace_path | get 0.size) == 0B {
+    r#'
+let zsh_completer = {|spans|
+  let expanded_alias = (scope aliases | where name == $spans.0 | $in.0?.expansion?)
+  let spans = (if $expanded_alias != null {
+    $spans | skip 1 | prepend ($expanded_alias | split row " " | take 1)
+  } else {
+    $spans
+  })
+
+  let command = ($spans | str join " ")
+  let result = (do {
+    ^zsh -c $"autoload -Uz compinit; compinit -C; capture\(\) { compadd\(\) { print -l -- \${@[-1]}; builtin compadd \"$@\" }; _main_complete \"$@\" }; capture ($command)"
+  } | complete)
+
+  if $result.exit_code != 0 or ($result.stdout | str trim | is-empty) {
+    return null
+  }
+
+  $result.stdout | lines | where { $in != "" } | each {|line| { value: $line } }
+}
+
+mut current = (($env | default {} config).config | default {} completions)
+$current.completions = ($current.completions | default {} external)
+$current.completions.external = ($current.completions.external
+| default true enable
+| upsert completer { if $in == null { $zsh_completer } else { $in } })
+
+$env.config = $current
+'# | save -f $carapace_path
   }
 }
 
