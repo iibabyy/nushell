@@ -1,32 +1,32 @@
+use std/util "path add"
+
 # Homebrew (macOS)
 if (sys host | get name) == "Darwin" {
   # Apple Silicon
   if ("/opt/homebrew/bin" | path exists) {
-    $env.PATH = $env.PATH | prepend ["/opt/homebrew/bin" "/opt/homebrew/sbin"]
+    path add "/opt/homebrew/bin" "/opt/homebrew/sbin"
   }
   # Intel Mac
   if ("/usr/local/bin" | path exists) {
-    $env.PATH = $env.PATH | prepend "/usr/local/bin"
+    path add "/usr/local/bin"
   }
 }
 
-$env.PATH = $env.PATH | prepend ($env.HOME | path join ".local/bin")
+path add ($env.HOME | path join ".local/bin")
 
 # Bun
-$env.PATH = $env.PATH | prepend $"($env.HOME)/.bun/bin"
+path add ($env.HOME | path join .bun bin)
 
 # Opencode
-$env.PATH = $env.PATH | prepend $"($env.HOME)/.opencode/bin"
+path add ($env.HOME | path join .opencode bin)
 
 # Cargo
-if (which cargo | is-not-empty) {
-  let cargo_home = $env.CARGO_HOME?
-    | default ($env.HOME | path join .cargo)
-
-  if ($cargo_home | path exists) {
-    $env.PATH = $env.PATH | prepend ($cargo_home | path join "bin")
-    $env.CARGO_TARGET_DIR = $cargo_home | path join "target"
-  }
+let cargo_home = $env.CARGO_HOME?
+  | default ($env.HOME | path join .cargo)
+if ($cargo_home | path exists) {
+  path add ($cargo_home | path join "bin")
+  # Shared target directory across all Cargo projects (saves disk, slower parallel builds)
+  # $env.CARGO_TARGET_DIR = $cargo_home | path join "target"
 }
 
 # Go Binary Path
@@ -38,7 +38,7 @@ if ($go_path | path exists) {
     ...(if $gopath_result.exit_code == 0 { [($gopath_result.stdout | str trim | path join bin)] } else { [] })
   ]
 
-  $env.PATH = $env.PATH | prepend $go_paths
+  path add ...$go_paths
 }
 
 # Cache directory
