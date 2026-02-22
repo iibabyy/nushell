@@ -29,18 +29,6 @@ if ($cargo_home | path exists) {
   # $env.CARGO_TARGET_DIR = $cargo_home | path join "target"
 }
 
-# Go Binary Path
-let go_path = (which go | get 0?.path | default /usr/local/go/bin/go)
-if ($go_path | path exists) {
-  let gopath_result = (do { ^$go_path env GOPATH } | complete)
-  let go_paths = [
-    ($go_path | path dirname),
-    ...(if $gopath_result.exit_code == 0 { [($gopath_result.stdout | str trim | path join bin)] } else { [] })
-  ]
-
-  path add ...$go_paths
-}
-
 # Cache directory
 const cache = ($nu.default-config-dir | path join .cache)
 mkdir $cache
