@@ -23,5 +23,5 @@ export alias cw = cargo watch '-q' '-c' '-x'
 export alias anti = antigravity
 
 # xclip
-export alias clip = clipboard copy
+export alias clip = xclip -selection clipboard
 export alias paste = clipboard paste
