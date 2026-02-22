@@ -2,10 +2,9 @@
 $env.config.buffer_editor = "vim"
 $env.config.show_banner = false
 
-# Zoxide
+# Zoxide / Carapace
 # ---------------------
-
-const cache = ($nu.default-config-dir | path join .cache)
+const cache = ".cache"
 const zoxide_path = ($cache | path join "zoxide.nu")
 const carapace_path = ($cache | path join "carapace.nu")
 
@@ -18,4 +17,5 @@ source $carapace_path
 # ---------------------
 overlay use nupm/nupm --prefix
 
-use ($nu.default-config-dir | path join custom) *
+use custom *
+
