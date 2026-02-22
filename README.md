@@ -83,7 +83,7 @@ nu
 - Git-aware prompt with branch display, upstream tracking (↑ ↓ indicators) with background fetching
 
 #### Shell Completions
-- Completions for claude with carapace for external commands (falls back to zsh when carapace can't complete)
+- Completions for claude, with carapace for external commands (bridges to zsh/fish/bash for commands without native specs, plus nushell-level zsh fallback)
 
 #### Git Worktree Management
 - **`gtree`** - Simply create/remove git worktrees
