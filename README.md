@@ -105,6 +105,24 @@ nu
 
 ## Customization
 
+### Default Editor
+
+The default editor is set to `vim`. To change it:
+
+1. Open the configuration file:
+```bash
+config nu
+```
+
+2. Find the following line and replace `vim` with your preferred editor:
+```nu
+$env.config.buffer_editor = "vim"  # e.g. "nano", "code", "emacs"
+```
+
+For more configuration options, see the [Nushell Configuration Guide](https://www.nushell.sh/book/configuration.html).
+
+### General
+
 Edit `config.nu` to modify imports and settings.
 
 Add your own modules in `custom/` and export them in `custom/mod.nu`.

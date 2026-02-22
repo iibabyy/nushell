@@ -1,4 +1,5 @@
-$env.config.buffer_editor = "vi"
+# Default editor (change this to your preferred editor, e.g. "nano", "code", "emacs")
+$env.config.buffer_editor = "vim"
 $env.config.show_banner = false
 
 # Zoxide
