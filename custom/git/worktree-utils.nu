@@ -155,7 +155,7 @@ export def copy-to-clipboard [
     path: path
 ]: nothing -> string {
     try {
-        $path | clipboard copy | ignore
+        $path | clip | ignore
         $"Path copied to clipboard ($path)"
     } catch { |err|
         $"Could not copy path to clipboard: ($err.msg)"
