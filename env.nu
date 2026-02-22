@@ -58,6 +58,10 @@ if (which zoxide | is-not-empty) {
   }
 }
 
+# Configure carapace to bridge completions from available shells.
+# For commands without native carapace specs, it tries each bridge in order.
+$env.CARAPACE_BRIDGES = 'zsh,fish,bash'
+
 # Populate carapace init if installed and file is empty
 # When carapace is available with zsh, creates a cascading completer (carapace → zsh)
 # Falls back to zsh-only completer when carapace is unavailable
