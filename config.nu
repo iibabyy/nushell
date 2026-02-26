@@ -1,5 +1,5 @@
 # Default editor (change this to your preferred editor, e.g. "nano", "code", "emacs")
-$env.config.buffer_editor = "nvim"
+$env.config.buffer_editor = "vi"
 $env.config.show_banner = false
 
 # Environment variables
@@ -23,29 +23,21 @@ do --env {
 
   # Homebrew (macOS)
   if (sys host | get name) == "Darwin" {
-    # Apple Silicon
-    if ("/opt/homebrew/bin" | path exists) {
-      add ["/opt/homebrew/bin", "/opt/homebrew/sbin"]
-    }
-    # Intel Mac
-    if ("/usr/local/bin" | path exists) {
-      add "/usr/local/bin"
-    }
+    add ["/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin"]
   }
 
-  add ($env.HOME | path join ".local/bin")
+  add ($env.HOME | path join .local bin)
 
   # Bun
   add ($env.HOME | path join .bun bin)
 
   # Cargo
   let cargo_home = ($env.CARGO_HOME? | default ($env.HOME | path join .cargo))
-  if ($cargo_home | path exists) {
-    add ($cargo_home | path join "bin")
-    # Shared target directory across all Cargo projects (saves disk, etc...)
-    $env.CARGO_TARGET_DIR = $cargo_home | path join "target"
-  }
+  add ($cargo_home | path join bin)
+  # Shared target directory across all Cargo projects (saves disk, etc...)
+  # $env.CARGO_TARGET_DIR = $cargo_home | path join "target"
 
+  add ($env.HOME | path join .local go bin)
 }
 
 # Zoxide / Carapace

@@ -23,3 +23,10 @@ if $has_carapace {
   touch $carapace_path 
 }
 
+let has_starship = (which starship | is-not-empty)
+if $has_starship {
+  mkdir ($nu.data-dir | path join "vendor/autoload")
+  starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
+}
+
+
