@@ -60,7 +60,7 @@ source $carapace_path
 
 # Nupm Package Manager
 # ---------------------
-overlay use nupm/nupm --prefix
+# overlay use nupm/nupm --prefix
 
 use custom *
 
