@@ -1,6 +1,9 @@
 # Zoxide / Carapace
 # ---------------------
 
+# Ensure homebrew is on PATH before checking for tools
+$env.PATH = ($env.PATH | split row (char esep) | prepend "/opt/homebrew/bin")
+
 # Cache directory
 mkdir $"($nu.cache-dir)"
 
@@ -20,6 +23,11 @@ if $has_carapace {
   $env.CARAPACE_BRIDGES = 'zsh,fish,bash,inshellisense'
   carapace _carapace nushell | save --force $carapace_path
 } else try {
-  touch $carapace_path 
+  touch $carapace_path
 }
 
+let has_starship = (which starship | is-not-empty)
+if $has_starship {
+  mkdir ($nu.data-dir | path join "vendor/autoload")
+  starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
+}

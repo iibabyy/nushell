@@ -1,6 +1,7 @@
 # Default editor (change this to your preferred editor, e.g. "nano", "code", "emacs")
-$env.config.buffer_editor = "vim"
+$env.config.buffer_editor = "nvim"
 $env.config.show_banner = false
+$env.config.completions.case_sensitive = false
 
 # Environment variables
 do --env {
@@ -62,12 +63,10 @@ source $carapace_path
 # ---------------------
 overlay use nupm/nupm --prefix
 
-use custom *
+alias vim = nvim
+alias code = code-insiders
+$env.EDITOR = "nvim"
+$env.VISUAL = "nvim"
 
-# argc-completions
-$env.ARGC_COMPLETIONS_ROOT = '/home/ibaby/.config/argc-completions'
-$env.ARGC_COMPLETIONS_PATH = ($env.ARGC_COMPLETIONS_ROOT + '/completions/linux:' + $env.ARGC_COMPLETIONS_ROOT + '/completions')
-$env.PATH = ($env.PATH | prepend ($env.ARGC_COMPLETIONS_ROOT + '/bin'))
-argc --argc-completions nushell | save -f '/home/ibaby/.config/argc-completions/tmp/argc-completions.nu'
-source '/home/ibaby/.config/argc-completions/tmp/argc-completions.nu'
+use custom *
 

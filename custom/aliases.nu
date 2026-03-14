@@ -25,3 +25,7 @@ export alias anti = antigravity
 # xclip
 export alias clip = xclip -selection clipboard
 export alias paste = clipboard paste
+
+export def ghtoken [] {
+  ^security find-generic-password -a "ihibti" -s "github-token" -w | pbcopy
+}
